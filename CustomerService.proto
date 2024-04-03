@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package smartretail;
+
+//customer service
+service CustomerService {
+    rpc AddToCart (Product) returns (CartResponse);
+    rpc ViewCart (Empty) returns (Cart);
+}
+
+//cart responsemessage CartResponse {
+    boolean success = 1;
+    string message = 2;
+}
