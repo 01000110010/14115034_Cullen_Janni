@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package smartretail;
+
+//checkout service
+
+service Checkout {
+    rpc CalculateTotal (Cart) returns (TotalResponse);
+    rpc ProcessPayment (PaymentInfo) returns (PaymentResponse);
+}
+
+//cart structure refers to items in the cart
+message Cart {
+    repeated Item items = 1;
+}
+
+//payment PaymentInfo
+messgae PaymentInfo {
+    string cardNumber = 1;
+    string expiryDate = 2;
+    string ccv = 3;
+}
+
+//total response that conveys cost in transaction
+message TotalResponse {
+    float total = 1;
+}
+
+//cart response provides feedback related to shopping cart operations 
+message CartResponse {
+    boolean success = 1;
+    string message = 2;
+}
