@@ -4,12 +4,18 @@ package smartretail;
 
 //customer service
 service CustomerService {
+    //adds product to customers cart
     rpc AddToCart (Product) returns (CartResponse);
+
+    //retreives customers cart
     rpc ViewCart (Empty) returns (Cart);
 }
 
-//cart response
+//cart response indicates if operation was successfull i.e adding product to cart etc
 message CartResponse {
-    boolean success = 1;
+    bool success = 1;
     string message = 2;
 }
+
+// Empty message for requests that don't require input
+message Empty {}
