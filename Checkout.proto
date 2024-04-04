@@ -5,7 +5,9 @@ package smartretail;
 //checkout service
 
 service Checkout {
+    //calculates total of the cart
     rpc CalculateTotal (Cart) returns (TotalResponse);
+    //processes the payment 
     rpc ProcessPayment (PaymentInfo) returns (PaymentResponse);
 }
 
@@ -14,20 +16,20 @@ message Cart {
     repeated Item items = 1;
 }
 
-//payment PaymentInfo
-messgae PaymentInfo {
+//payment PaymentInfo of credit/debit card
+message PaymentInfo {
     string cardNumber = 1;
     string expiryDate = 2;
-    string ccv = 3;
+    string cvv = 3;
 }
 
 //total response that conveys cost in transaction
 message TotalResponse {
-    float total = 1;
+    double total = 1;
 }
 
 //cart response provides feedback related to shopping cart operations 
 message CartResponse {
-    boolean success = 1;
+    bool success = 1;
     string message = 2;
 }
