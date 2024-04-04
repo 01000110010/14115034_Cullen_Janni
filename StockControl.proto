@@ -4,20 +4,27 @@ package smartretail;
 
 //stock control service
 service StockControl{
+    //adds product to stock
     rpc AddProduct (Product) returns (ProductResponse);
+
+    //deletes product from stock
     rpc DeleteProduct (Product) returns (ProductResponse);
+
+    //updates details of product
     rpc UpdateProduct (Product) returns (ProductResponse);
 }
 
-//product structure
+
+//product structure defines the structure of product in system 
 message Product {
     string id = 1;
     string name = 2;
-    float price = 3;
+    double price = 3;
     int32 quantity = 4;
 }
 
-//resposnse to product operations
+
+//represents response to operations performed on product like addition, deletion and updting
 message ProductResponse {
     string id = 1;
     string message = 2;
