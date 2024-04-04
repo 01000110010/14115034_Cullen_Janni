@@ -11,7 +11,7 @@ service Checkout {
     rpc ProcessPayment (PaymentInfo) returns (PaymentResponse);
 }
 
-//cart structure refers to items in the cart
+//cart structure refers to products in the cart
 message Cart {
     repeated Item items = 1;
 }
