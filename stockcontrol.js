@@ -21,7 +21,6 @@ function addProduct(){
     const price = parseFloat(readlineSync.question('Enter product price: ')); 
     const quantity = parseInt(readlineSync.question('Enter product quantity: ')); 
 
-
     const product = {id, name, price, quantity};
 
     //call the ADDProduct RPC which gives error or success message to client
@@ -31,8 +30,25 @@ function addProduct(){
             return;
         }
         console.log('Product was added successfully', response.message);
+
+        //add products to the array
+        products.push(product);
+
+        //function to add another product asking user for input of Y or N 
+        const anotherProduct = readlineSync.keyInYN('Do you want to add another product? ');
+        if (anotherProduct) {
+            //y adds product
+            addProduct(); 
+        } else {
+            //n exits application
+            console.log('Exit application');
+            process.exit(0);
+        }
     });
 }
+
+//create and initialize empty array
+const products = [];
 
 //main function for user intraction with application with multiple choices
 function main(){
@@ -57,3 +73,4 @@ function main(){
 
 //entry point where execution of code begins 
 main();
+
