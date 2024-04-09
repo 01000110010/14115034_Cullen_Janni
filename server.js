@@ -4,8 +4,13 @@ const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 //loads the Protocol Buffer definition file named StockControl.proto
 const packageDefinition = protoLoader.loadSync('StockControl.proto', {});
+//loads the Protocol Buffer definition file named Checkout.proto
+const checkoutPackageDefinition = protoLoader.loadSync('Checkout.proto', {});
 //loads the gRPC package definition from the packageDefinition
 const smartretail = grpc.loadPackageDefinition(packageDefinition).smartretail;
+const checkoutPackage = grpc.loadPackageDefinition(checkoutPackageDefinition).smartretail;//added
+
+
 
 //function that takes parameters call and callback represents logic for adding products
 const addProduct = (call, callback) => {
@@ -29,15 +34,32 @@ const updateProduct = (call, callback) => {
 //creates a new gRPC server instance
 const server = new grpc.Server();
 
-// adds services to the gRPC server
+//adds services to the gRPC server
 server.addService(smartretail.StockControl.service, {
   AddProduct: addProduct,
   DeleteProduct: deleteProduct,
   UpdateProduct: updateProduct
+
+});
+
+//function for calculating total cost of products in shopping cart
+const calculateTotal = (call, callback) => {
+  const products = call.request.products;
+  let total = 0;
+  products.forEach(products => {
+    total += products.price * products.quantity;
+  });
+  callback(null, { total });
+};
+
+//checkout service to the gRPC server
+server.addService(checkoutPackage.Checkout.service, {
+  CalculateTotal: calculateTotal,
+  
 });
 
 //port number server will listen to
-const port = '3000';
+const port = '50051';
 //binds server to port
 server.bindAsync(`0.0.0.0:${port}`, grpc.ServerCredentials.createInsecure(), (error, port) => {
   //returns error 
@@ -48,3 +70,5 @@ server.bindAsync(`0.0.0.0:${port}`, grpc.ServerCredentials.createInsecure(), (er
   //connected successfully to port
   console.log(`Server running at http://0.0.0.0:${port}`);
 });
+
+
