@@ -3,7 +3,6 @@ const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const readlineSync = require('readline-sync');
 
-
 //loads the Protocol Buffer definition file named Checkout.proto
 const packageDefinition = protoLoader.loadSync('Checkout.proto', {});
 //loads the gRPC package definition from the packageDefinition
@@ -34,7 +33,7 @@ checkoutClient.calculateTotal(cart, (error, response) => {
 //create function to verify credit/debit cards
 function verifyCreditCard(){
     const cardNumber = readlineSync.question("Enter your card number: ");
-    const expiryDate = readlineSync.question("Enter expiry date (MM/YY: ");
+    const expiryDate = readlineSync.question("Enter expiry date (MM/YY): ");
     const cvv = readlineSync.question("Enter CVV:");
 
     //credit/debit card validation logic
@@ -49,4 +48,6 @@ function verifyCreditCard(){
         console.log("Invalid credit/debit card details have been entered. Please check again");
     }
 }
+//call the function to prompt for credit/debit card details
+verifyCreditCard();
 
