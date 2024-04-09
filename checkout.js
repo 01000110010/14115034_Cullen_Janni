@@ -50,4 +50,3 @@ function verifyCreditCard(){
 }
 //call the function to prompt for credit/debit card details
 verifyCreditCard();
-
