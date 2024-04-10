@@ -9,11 +9,20 @@ service Checkout {
     rpc CalculateTotal (Cart) returns (TotalResponse);
     //processes the payment 
     rpc ProcessPayment (PaymentInfo) returns (PaymentResponse);
+    //method for verifying credit/debit card details
+    rpc VerifyCard (PaymentInfo) returns (CardVerificationResponse);
 }
 
-//cart structure refers to products in the cart
+//cart structure refers to items in the cart
 message Cart {
     repeated Item items = 1;
+}
+//message for products in shopping cart
+message Item {
+    string productId = 1;
+    string productName = 2;
+    int32 quantity = 3;
+    double price = 4;
 }
 
 //payment PaymentInfo of credit/debit card
@@ -28,8 +37,20 @@ message TotalResponse {
     double total = 1;
 }
 
+//defines response for payment processing request
+message PaymentResponse {
+    bool success = 1;
+    string message = 2;
+}
+
 //cart response provides feedback related to shopping cart operations 
 message CartResponse {
     bool success = 1;
+    string message = 2;
+}
+
+//defines response for card verification request
+message CardVerificationResponse {
+    bool isValid = 1;
     string message = 2;
 }
