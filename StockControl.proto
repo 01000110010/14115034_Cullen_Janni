@@ -6,12 +6,6 @@ package smartretail;
 service StockControl{
     //adds product to stock
     rpc AddProduct (Product) returns (ProductResponse);
-
-    //deletes product from stock
-    rpc DeleteProduct (Product) returns (ProductResponse);
-
-    //updates details of product
-    rpc UpdateProduct (Product) returns (ProductResponse);
 }
 
 
