@@ -44,7 +44,6 @@ server.addService(smartretail.StockControl.service, {
 
 
 //function for calculating total cost of products in shopping cart
-// Function for calculating total cost of products in shopping cart
 const calculateTotal = (call, callback) => {
   const products = call.request.items;
 
