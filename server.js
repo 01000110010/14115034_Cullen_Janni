@@ -57,6 +57,8 @@ const calculateTotal = (call, callback) => {
   products.forEach(product => {
     total += product.price * product.quantity;
   });
+  //logs total cost
+  console.log("The total cost of your cart is: \u20AC" + total.toFixed(2));
 
   callback(null, { total });
 };
@@ -98,5 +100,3 @@ server.bindAsync(`0.0.0.0:${port}`, grpc.ServerCredentials.createInsecure(), (er
   //connected successfully to port
   console.log(`Server running at http://0.0.0.0:${port}`);
 });
-
-
