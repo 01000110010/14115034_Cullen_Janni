@@ -1,71 +1,44 @@
-//define the terminalStyler object
-const terminalStyler = {
-    // Styles for text colors
-    black: (text) => `\x1b[30m${text}\x1b[0m`,
-    red: (text) => `\x1b[31m${text}\x1b[0m`,
-    green: (text) => `\x1b[32m${text}\x1b[0m`,
-    yellow: (text) => `\x1b[33m${text}\x1b[0m`,
-    blue: (text) => `\x1b[34m${text}\x1b[0m`,
-    magenta: (text) => `\x1b[35m${text}\x1b[0m`,
-    cyan: (text) => `\x1b[36m${text}\x1b[0m`,
-    white: (text) => `\x1b[37m${text}\x1b[0m`,
-
-    //styles for background colors
-    bgBlack: (text) => `\x1b[40m${text}\x1b[0m`,
-    bgRed: (text) => `\x1b[41m${text}\x1b[0m`,
-    bgGreen: (text) => `\x1b[42m${text}\x1b[0m`,
-    bgYellow: (text) => `\x1b[43m${text}\x1b[0m`,
-    bgBlue: (text) => `\x1b[44m${text}\x1b[0m`,
-    bgMagenta: (text) => `\x1b[45m${text}\x1b[0m`,
-    bgCyan: (text) => `\x1b[46m${text}\x1b[0m`,
-    bgWhite: (text) => `\x1b[47m${text}\x1b[0m`,
-
-    //other styles
-    bold: (text) => `\x1b[1m${text}\x1b[0m`,
-    italic: (text) => `\x1b[3m${text}\x1b[0m`,
-    underline: (text) => `\x1b[4m${text}\x1b[0m`,
-    dim: (text) => `\x1b[2m${text}\x1b[0m`,
-    reset: (text) => `\x1b[0m${text}\x1b[0m`, 
-};
-
-//load required modules 
+//import necessary modules
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
 const readlineSync = require('readline-sync');
 
-//loads the Protocol Buffer definition file named Checkout.proto
-const packageDefinition = protoLoader.loadSync('Checkout.proto', {});
-//loads the gRPC package definition from the packageDefinition
+// Load the Protocol Buffer definition file named Checkout.proto
+const packageDefinition = protoLoader.loadSync('Checkout.proto');
+
+// Load the gRPC package definition from the packageDefinition
 const smartretail = grpc.loadPackageDefinition(packageDefinition).smartretail;
 
-//creates new gRPC client for checkout service and specifies the address and port of the gRPC server
-const checkoutClient = new smartretail.Checkout(
-    '127.0.0.1:50051',
-    grpc.credentials.createInsecure(),
-);
+// Create new gRPC client for checkout service and specify the address and port of the gRPC server
+const checkoutClient = new smartretail.Checkout('127.0.0.1:50051', grpc.credentials.createInsecure());
 
-//function for calculating total cost of products in shopping cart
+// Function for calculating total cost of products in shopping cart
 function calculateTotal(products) {
     const cart = {
         items: products
     };
-    checkoutClient.calculateTotal(cart, (error, response) => {
-        if (error) {
-            console.error(terminalStyler.red('Error calculating total:'), terminalStyler.red(error.message));
-            return;
-        }
-        
-        //round the total cost to two decimal places and concatenate with euro symbol
-        const formattedTotal = "\u20AC" + response.total.toFixed(2);
+    const call = checkoutClient.ProcessCheckout();
 
-        //log formatted total to console
-        console.log(terminalStyler.cyan('The total cost of your cart is:'), terminalStyler.cyan(formattedTotal));
+    call.on('data', function(response) {
+        if (response.totalResponse && response.totalResponse.total !== undefined) {
+            const formattedTotal = "\u20AC" + response.totalResponse.total.toFixed(2);
+            console.log('Your card has been verified and purchase accepted.\n' + 'The total cost of your cart is:', formattedTotal);
+        } else {
+            console.log('Unexpected response from server:', response);
+        }
     });
+
+    call.on('end', function() {
+        console.log('Server has finished processing the checkout.');
+    });
+
+    // Send cart items to the server
+    call.write({ cart });
+    // Indicate the end of data
+    call.end();
 }
 
-module.exports = { calculateTotal };
-
-//function to add products to the cart
+// Function to add products to the cart
 function addToCart() {
     let addProduct = readlineSync.keyInYN('Would you like to enter a product? ');
     const products = [];
@@ -80,46 +53,104 @@ function addToCart() {
 
         addProduct = readlineSync.keyInYN('Do you want to add another product? ');
     }
-
-    //after adding all products proceed to calculate total with products array
+    // After adding all products, proceed to calculate total with products array
     calculateTotal(products);
 }
 
-//create function to verify credit/debit cards
+// Function to verify credit/debit cards
 function verifyCreditCard() {
     const cardNumber = readlineSync.question("Enter your card number: ");
     const expiryDate = readlineSync.question("Enter expiry date (MM/YY): ");
     const cvv = readlineSync.question("Enter CVV:");
 
-    // Check if the card number length is 16 digits
-    if (!cardNumber || cardNumber.length !== 16 || isNaN(parseInt(cardNumber, 10))) {
-        console.log(terminalStyler.red("Invalid credit/debit card details have been entered. Please check again."));
-        return; // Exit the function if the card number is not valid
-    }
-
-    //construct PaymentInfo message
     const paymentInfo = {
         cardNumber: cardNumber,
         expiryDate: expiryDate,
         cvv: cvv
     };
 
-    //call the VerifyCard RPC method
+    // Call the VerifyCard RPC method
     checkoutClient.VerifyCard(paymentInfo, (error, response) => {
         if (error) {
-            console.error(terminalStyler.red('Error verifying card:'), terminalStyler.red(error.message));
+            console.error('Error verifying card:', error.message);
             return;
         }
-        if (response.isValid) {
-            console.log(terminalStyler.green("Credit/debit card details are valid."));
-            //continue with processing
+        if(response.isValid) {
+            console.log("Credit/debit card details are valid.");
+            // Proceed to add products to cart and calculate total cost
+            addToCart();
         } else {
-            console.log(terminalStyler.red("Invalid credit/debit card details have been entered. Please check again."));
+            console.log("Invalid credit/debit card details have been entered. Please check again.");
         }
     });
 }
 
-//call the function to add products to the cart
-addToCart();
-//call the function to prompt for credit/debit card details
-verifyCreditCard();
+
+
+ // Function to start chat session
+ function startChatSession() {
+    const chatClient = new smartretail.CheckoutChat(
+        '127.0.0.1:50051',
+        grpc.credentials.createInsecure(),
+    );
+
+    const chatStream = chatClient.Chat();
+
+    chatStream.on('data', function(message) {
+        console.log(`[${message.user}]: ${message.message}`);
+    });
+
+    chatStream.on('end', function() {
+        console.log('Server has ended the chat.');
+    });
+
+    // Use readline-sync for user input
+    function getUserInput() {
+        const message = readlineSync.question('Enter your message or type "exit" to end the chat: ');
+        if (message.toLowerCase() === 'exit') {
+            chatStream.end();
+            // Return from the function immediately after ending the chat
+            return; 
+        } else {
+            chatStream.write({ user: 'CheckoutClient', message: message });
+            //call this function again to get the next message
+            getUserInput(); 
+        }
+    }
+    //start the chat by getting the user's input
+    getUserInput(); 
+}
+
+// Function for user input
+function main() {
+    console.log("Welcome to the Checkout System");
+    console.log("1. Add product to cart");
+    console.log("2. Start chat with server");
+    console.log("3. Exit");
+    const choice = readlineSync.question("Enter your choice: ");
+
+    // Switch statement executes different actions based on user choice
+    switch (choice) {
+        case '1':
+            addToCart();
+            // After adding products ask for card details
+            verifyCreditCard();
+            break;
+        case '2':
+            startChatSession();
+            break;
+        case '3':
+            // Exits the app
+            console.log('Exit application');
+            process.exit(0);
+            break;
+        default:
+            // Asks for correct input
+            console.log('Invalid choice please enter 1 2 or 3');
+            main();
+    }
+}
+
+// Entry point where execution of code begins 
+main();
+
