@@ -8,6 +8,17 @@ service StockControl{
     rpc AddProduct (Product) returns (ProductResponse);
 }
 
+//chat service definition.
+service ChatService {
+  // Sends a greeting
+  rpc Chat(stream ChatMessage) returns (stream ChatMessage) {}
+}
+
+//request message containing the user's name.
+message ChatMessage {
+  string user = 1;
+  string message = 2;
+}
 
 //product structure defines the structure of product in system 
 message Product {
