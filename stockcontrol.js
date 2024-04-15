@@ -6,14 +6,12 @@ const readlineSync = require('readline-sync');
 //loads the Protocol Buffer definition file named StockControl.proto
 const packageDefinition = protoLoader.loadSync('StockControl.proto', {});
 //loads the gRPC package definition from the packageDefinition
-const smartretail = grpc.loadPackageDefinition(packageDefinition) .smartretail;
+const smartretail = grpc.loadPackageDefinition(packageDefinition).smartretail;
 
 //creates new gRPC client for StockControl service and specifies the address and port of the gRPC server
-const stockControlClient = new smartretail.StockControl(
-    '127.0.0.1:50051',
-    grpc.credentials.createInsecure(),
+const stockControlClient = new smartretail.StockControl('127.0.0.1:50051',grpc.credentials.createInsecure(),
 );
-  
+
 //create function to add product and prompts user to enter product details
 function addProduct(){
     const id = readlineSync.question('Enter product ID :');
@@ -23,7 +21,7 @@ function addProduct(){
 
     const product = {id, name, price, quantity};
 
-    //call the ADDProduct RPC which gives error or success message to client
+    //call the AddProduct RPC which gives error or success message to client
     stockControlClient.AddProduct(product, (error, response) => {
         if (error) {
             console.error('Error adding product', error.message);
@@ -50,11 +48,12 @@ function addProduct(){
 //create and initialize empty array
 const products = [];
 
-//main function for user intraction with application with multiple choices
+//main function for user interaction with application with multiple choices
 function main(){
     console.log("Welcome to the Stock Control Client");
     console.log("1. Add product");
-    console.log("2. Exit");
+    console.log("2. Start chat");
+    console.log("3. Exit");
     const choice = readlineSync.question("Enter your choice: ");
 
     //switch statement executes different actions based on user choice
@@ -62,7 +61,10 @@ function main(){
         case '1':
             addProduct();
             break;
-        case '2':    
+        case '2':
+            startChat();
+            break;
+        case '3':    
             console.log('Exit application');
             process.exit(0);
         default:
@@ -71,6 +73,42 @@ function main(){
     }
 }
 
+//function to start chat session for StockControl
+function startChat() {
+    // Initialize the chat client for StockControl if not already done
+    const chatClient = new smartretail.ChatService(
+        '127.0.0.1:50051',
+        grpc.credentials.createInsecure()
+    );
+
+    //ceate a new chat stream for this session
+    const chatStream = chatClient.Chat();
+
+    //handle incoming messages
+    chatStream.on('data', function(chatMessage) {
+        console.log(`[${chatMessage.user}]: ${chatMessage.message}`);
+    });
+
+    //handle chat session end
+    chatStream.on('end', function() {
+        console.log('Server ended the chat.');
+    });
+
+    //function to get user input and send messages
+    function getUserInput() {
+        const message = readlineSync.question('Enter your message or type "exit" to end the chat: ');
+        if (message.toLowerCase() === 'exit') {
+            chatStream.end();
+            //exit the function after ending the chat
+            return; 
+        } else {
+            chatStream.write({ user: 'StockControlClient', message: message });
+            getUserInput(); 
+        }
+    }
+
+    //start the chat by getting the user's first input
+    getUserInput();
+}
 //entry point where execution of code begins 
 main();
-
