@@ -2,20 +2,41 @@ syntax = "proto3";
 
 package smartretail;
 
-//customer service
 service CustomerService {
-    //adds product to customers cart
-    rpc AddToCart (Product) returns (CartResponse);
-
-    //retreives customers cart
-    rpc ViewCart (Empty) returns (Cart);
+  rpc GetDeliveryCost (Empty) returns (DeliveryCostResponse) {}
+  rpc GetOpeningTimes (Empty) returns (OpeningTimesResponse) {}
+  //bidirectional streaming RPC for opening hours and delivery costs
+  rpc StreamOpeningTimesAndDeliveryCosts(stream OpeningTimesAndDeliveryCostRequest) returns (stream OpeningTimesAndDeliveryCostResponse) {}
 }
 
-//cart response indicates if operation was successfull i.e adding product to cart etc
-message CartResponse {
-    bool success = 1;
-    string message = 2;
-}
-
-// Empty message for requests that don't require input
 message Empty {}
+
+message DeliveryCostResponse {
+  string cost = 1;
+}
+
+message OpeningTimesResponse {
+  string times = 1;
+}
+
+//defines message for a chat message
+message ChatMessage {
+  string user = 1;
+  string message = 2;
+}
+
+//message definitions for the bidirectional streaming
+message OpeningTimesAndDeliveryCostRequest {
+  string requestType = 1; // Could be "openingTimes" or "deliveryCost"
+}
+
+message OpeningTimesAndDeliveryCostResponse {
+  string responseType = 1; // Could be "openingTimes" or "deliveryCost"
+  string response = 2; // The actual opening times or delivery cost
+}
+
+//defines the chat service
+service CustomerServiceChat {
+  //bidirectional streaming RPC for chat
+  rpc Chat(stream ChatMessage) returns (stream ChatMessage);
+}
