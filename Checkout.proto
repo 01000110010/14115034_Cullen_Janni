@@ -3,20 +3,31 @@ syntax = "proto3";
 package smartretail;
 
 //checkout service
-
 service Checkout {
     //calculates total of the cart
     rpc CalculateTotal (Cart) returns (TotalResponse);
-    //processes the payment 
-    rpc ProcessPayment (PaymentInfo) returns (PaymentResponse);
     //method for verifying credit/debit card details
     rpc VerifyCard (PaymentInfo) returns (CardVerificationResponse);
+    //bidirectional streaming RPC for processing checkout and sending total cost
+    rpc ProcessCheckout (stream CheckoutRequest) returns (stream CheckoutResponse);
+}
+
+//define a message for chat
+message ChatMessage {
+  string user = 1;
+  string message = 2;
+}
+
+//define the chat service
+service CheckoutChat {
+  rpc Chat(stream ChatMessage) returns (stream ChatMessage) {}
 }
 
 //cart structure refers to items in the cart
 message Cart {
     repeated Item items = 1;
 }
+
 //message for products in shopping cart
 message Item {
     string productId = 1;
@@ -53,4 +64,16 @@ message CartResponse {
 message CardVerificationResponse {
     bool isValid = 1;
     string message = 2;
+}
+
+// Request message for bidirectional streaming RPC for processing checkout
+message CheckoutRequest {
+    Cart cart = 1;
+    PaymentInfo payment_info = 2;
+}
+
+// Response message for bidirectional streaming RPC for processing checkout
+message CheckoutResponse {
+    TotalResponse total_response = 1;
+    PaymentResponse payment_response = 2;
 }
