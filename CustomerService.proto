@@ -5,6 +5,8 @@ package smartretail;
 service CustomerService {
   rpc GetDeliveryCost (Empty) returns (DeliveryCostResponse) {}
   rpc GetOpeningTimes (Empty) returns (OpeningTimesResponse) {}
+  rpc AskQuestion (QuestionRequest) returns (QuestionResponse) {} // Add this line
+
   //bidirectional streaming RPC for opening hours and delivery costs
   rpc StreamOpeningTimesAndDeliveryCosts(stream OpeningTimesAndDeliveryCostRequest) returns (stream OpeningTimesAndDeliveryCostResponse) {}
 }
@@ -19,6 +21,14 @@ message OpeningTimesResponse {
   string times = 1;
 }
 
+message QuestionRequest { // Add this message
+  int32 questionType = 1;
+}
+
+message QuestionResponse { // Add this message
+  string message = 1;
+}
+
 //defines message for a chat message
 message ChatMessage {
   string user = 1;
@@ -27,12 +37,12 @@ message ChatMessage {
 
 //message definitions for the bidirectional streaming
 message OpeningTimesAndDeliveryCostRequest {
-  string requestType = 1; // Could be "openingTimes" or "deliveryCost"
+  string requestType = 1; //
 }
 
 message OpeningTimesAndDeliveryCostResponse {
-  string responseType = 1; // Could be "openingTimes" or "deliveryCost"
-  string response = 2; // The actual opening times or delivery cost
+  string responseType = 1; 
+  string response = 2; 
 }
 
 //defines the chat service
