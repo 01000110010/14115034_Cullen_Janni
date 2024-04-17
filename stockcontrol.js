@@ -9,17 +9,21 @@ const packageDefinition = protoLoader.loadSync('StockControl.proto', {});
 const smartretail = grpc.loadPackageDefinition(packageDefinition).smartretail;
 
 //creates new gRPC client for StockControl service and specifies the address and port of the gRPC server
-const stockControlClient = new smartretail.StockControl('127.0.0.1:50051',grpc.credentials.createInsecure(),
-);
+const stockControlClient = new smartretail.StockControl('127.0.0.1:50051', grpc.credentials.createInsecure(), );
 
 //create function to add product and prompts user to enter product details
-function addProduct(){
+function addProduct() {
     const id = readlineSync.question('Enter product ID :');
     const name = readlineSync.question('Enter product name :');
-    const price = parseFloat(readlineSync.question('Enter product price: ')); 
-    const quantity = parseInt(readlineSync.question('Enter product quantity: ')); 
+    const price = parseFloat(readlineSync.question('Enter product price: '));
+    const quantity = parseInt(readlineSync.question('Enter product quantity: '));
 
-    const product = {id, name, price, quantity};
+    const product = {
+        id,
+        name,
+        price,
+        quantity
+    };
 
     //call the AddProduct RPC which gives error or success message to client
     stockControlClient.AddProduct(product, (error, response) => {
@@ -28,19 +32,17 @@ function addProduct(){
             return;
         }
         console.log('Product was added successfully', response.message);
-
         //add products to the array
         products.push(product);
-
         //function to add another product asking user for input of Y or N 
         const anotherProduct = readlineSync.keyInYN('Do you want to add another product? ');
         if (anotherProduct) {
             //y adds product
-            addProduct(); 
+            addProduct();
         } else {
             //n exits application
-            console.log('Exit application');
-            process.exit(0);
+            //ask if the user wants to perform another action
+            askForAnotherAction();
         }
     });
 }
@@ -49,7 +51,7 @@ function addProduct(){
 const products = [];
 
 //main function for user interaction with application with multiple choices
-function main(){
+function main() {
     console.log("Welcome to the Stock Control Client");
     console.log("1. Add product");
     console.log("2. Start chat");
@@ -57,14 +59,14 @@ function main(){
     const choice = readlineSync.question("Enter your choice: ");
 
     //switch statement executes different actions based on user choice
-    switch (choice){
+    switch (choice) {
         case '1':
             addProduct();
             break;
         case '2':
             startChat();
             break;
-        case '3':    
+        case '3':
             console.log('Exit application');
             process.exit(0);
         default:
@@ -75,7 +77,7 @@ function main(){
 
 //function to start chat session for StockControl
 function startChat() {
-    // Initialize the chat client for StockControl if not already done
+    //initialize the chat client for StockControl if not already done
     const chatClient = new smartretail.ChatService(
         '127.0.0.1:50051',
         grpc.credentials.createInsecure()
@@ -86,12 +88,29 @@ function startChat() {
 
     //handle incoming messages
     chatStream.on('data', function(chatMessage) {
-        console.log(`[${chatMessage.user}]: ${chatMessage.message}`);
+        console.log(`${chatMessage.user}: ${chatMessage.message}`);
     });
 
     //handle chat session end
     chatStream.on('end', function() {
         console.log('Server ended the chat.');
+
+        //ask if the user wants to start another chat
+        const anotherChat = readlineSync.keyInYN('Do you want to start another chat? ');
+        if (anotherChat) {
+            //continue chatting
+            startChat();
+        } else {
+            //ask if the user wants to perform another action
+            const anotherAction = readlineSync.keyInYN('Do you want to perform another action? ');
+            if (anotherAction) {
+                //return to the main menu
+                main();
+            } else {
+                console.log('Exit application');
+                process.exit(0);
+            }
+        }
     });
 
     //function to get user input and send messages
@@ -100,15 +119,30 @@ function startChat() {
         if (message.toLowerCase() === 'exit') {
             chatStream.end();
             //exit the function after ending the chat
-            return; 
+            return;
         } else {
-            chatStream.write({ user: 'StockControlClient', message: message });
-            getUserInput(); 
+            chatStream.write({
+                user: 'StockControlClient',
+                message: message
+            });
+            getUserInput();
         }
     }
 
     //start the chat by getting the user's first input
     getUserInput();
+}
+
+//function to ask if the user wants to perform another action
+function askForAnotherAction() {
+    const anotherAction = readlineSync.keyInYN('Do you want to perform another action? ');
+    if (anotherAction) {
+        //return to the main menu
+        main();
+    } else {
+        console.log('Exit application');
+        process.exit(0);
+    }
 }
 //entry point where execution of code begins 
 main();
