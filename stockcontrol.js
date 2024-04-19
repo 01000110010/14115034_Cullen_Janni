@@ -54,25 +54,46 @@ const products = [];
 function main() {
     console.log("Welcome to the Stock Control Client");
     console.log("1. Add product");
-    console.log("2. Start chat");
-    console.log("3. Exit");
+    console.log("2. Retrieve products");
+    console.log("3. Start chat");
+    console.log("4. Exit");
     const choice = readlineSync.question("Enter your choice: ");
 
-    //switch statement executes different actions based on user choice
     switch (choice) {
         case '1':
             addProduct();
             break;
         case '2':
-            startChat();
+            retrieveProducts();
             break;
         case '3':
+            startChat();
+            break;
+        case '4':
             console.log('Exit application');
             process.exit(0);
         default:
             console.log('Incorrect key');
             break;
     }
+}
+//function for retreiving products
+function retrieveProducts() {
+    stockControlClient.GetProducts({}, (error, response) => {
+        if (error) {
+            console.error('Error retrieving products', error.message);
+            return;
+        }
+        if (response.products && response.products.length > 0) {
+            console.log('Products retrieved successfully');
+            response.products.forEach(product => {
+                console.log(`ID: ${product.id}, Name: ${product.name}, Price: ${product.price}, Quantity: ${product.quantity}`);
+            });
+        } else {
+            console.log('No products have been added yet');
+        }
+        askForAnotherAction();
+    });
 }
 
 //function to start chat session for StockControl
