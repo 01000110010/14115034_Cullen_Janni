@@ -6,6 +6,8 @@ package smartretail;
 service StockControl{
     //adds product to stock
     rpc AddProduct (Product) returns (ProductResponse);
+    //gets product from stock
+    rpc GetProducts (Empty) returns (ProductList);
 }
 
 //chat service definition.
@@ -28,9 +30,16 @@ message Product {
     int32 quantity = 4;
 }
 
-
 //represents response to operations performed on product like addition, deletion and updting
 message ProductResponse {
     string id = 1;
     string message = 2;
+}
+
+//empty message for GetProducts
+message Empty {}
+
+//message for list of products
+message ProductList {
+    repeated Product products = 1;
 }
