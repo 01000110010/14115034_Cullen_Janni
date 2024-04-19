@@ -1,8 +1,6 @@
 //load necessary modules
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
-const fs = require('fs');
-const path = require('path');
 
 //load Protocol Buffer definitions for StockControl Checkout and CustomerService services
 const packageDefinition = protoLoader.loadSync('StockControl.proto');
@@ -19,23 +17,27 @@ const customerServiceOpeningTimes = "9am to 9pm";
 //define the delivery cost
 const deliveryCost = "5.99"; 
 
-//implementation for adding products
+//array to store products
+let products = [];
+
+//addProduct function
 function addProduct(call, callback) {
     console.log('Adding product:', call.request);
-    //log product information received via the call
-    const productData = `Product Added - ID: ${call.request.id}, Name: ${call.request.name}, Price: ${call.request.price}, Quantity: ${call.request.quantity}\n`;
-    const filePath = path.join(__dirname, 'products.txt');
-    fs.appendFile(filePath, productData, (err) => {
-        if (err) {
-            console.error('Error writing product to file:', err);
-            //send error response to client
-            callback(err, null);
-        } else {
-            console.log('Product data added to file successfully');
-            //send success response to client
-            callback(null, { id: call.request.id, message: 'Product added successfully' });
-        }
-    });
+    const productData = {
+        id: call.request.id,
+        name: call.request.name,
+        price: call.request.price,
+        quantity: call.request.quantity
+    };
+    products.push(productData);
+    console.log('Product data added to array successfully');
+    callback(null, { id: call.request.id, message: 'Product added successfully' });
+}
+
+//function to retrieve products
+function getProducts(call, callback) {
+    console.log('Retrieving products');
+    callback(null, { products });
 }
 
 //implementation for bidirectional streaming RPC for processing checkout
@@ -126,7 +128,8 @@ const server = new grpc.Server();
 
 //add services to the gRPC server
 server.addService(smartretail.StockControl.service, {
-    AddProduct: addProduct
+    AddProduct: addProduct,
+    GetProducts: getProducts
 });
 
 server.addService(smartretail.ChatService.service, { 
