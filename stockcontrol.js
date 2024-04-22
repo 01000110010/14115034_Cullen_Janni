@@ -15,8 +15,22 @@ const stockControlClient = new smartretail.StockControl('127.0.0.1:50051', grpc.
 function addProduct() {
     const id = readlineSync.question('Enter product ID :');
     const name = readlineSync.question('Enter product name :');
-    const price = parseFloat(readlineSync.question('Enter product price: '));
+    const priceInput = readlineSync.question('Enter product price: ');
+    const price = parseFloat(priceInput);
     const quantity = parseInt(readlineSync.question('Enter product quantity: '));
+
+    //check if all fields are filled and price is a number
+    if (!id || !name || isNaN(price) || isNaN(quantity) || priceInput != price.toString()) {
+        console.error('All fields must be filled and price must be a numeric values');
+        //ask if the user wants to try again
+        const tryAgain = readlineSync.keyInYN('Do you want to try again? ');
+        if (tryAgain) {
+            addProduct();
+        } else {
+            askForAnotherAction();
+        }
+        return;
+    }
 
     const product = {
         id,
@@ -31,7 +45,7 @@ function addProduct() {
             console.error('Error adding product', error.message);
             return;
         }
-        console.log('Product was added successfully', response.message);
+        console.log(response.message);
         //add products to the array
         products.push(product);
         //function to add another product asking user for input of Y or N 
@@ -46,6 +60,7 @@ function addProduct() {
         }
     });
 }
+
 
 //create and initialize empty array
 const products = [];
