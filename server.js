@@ -60,7 +60,9 @@ function processCheckout(call) {
                     total += item.price * item.quantity;
                 });
                 //send response with total if card is valid
-                call.write({ totalResponse: { total: total }, cardVerificationResponse: { isValid: cardValid } });
+                call.write({ totalResponse: { total: total }, cardVerificationResponse: { isValid: cardValid, message: "Your card has been verified" } });
+                call.write({ orderResponse: { success: true, message: "Your order has been accepted" } });
+                call.write({ warehouseResponse: { success: true, message: "Your order has been sent to the warehouse for picking" } });
             } else {
                 //send response indicating card is invalid
                 call.write({ cardVerificationResponse: { isValid: cardValid, message: "Invalid credit/debit card details have been entered. Please check again" } });
