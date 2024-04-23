@@ -19,6 +19,9 @@ function calculateTotal(products) {
             items: products
         };
 
+        //flag to track card validation
+        let cardValid = false;
+
         //create a bidirectional stream for checkout
         const call = checkoutClient.ProcessCheckout();
 
@@ -28,16 +31,25 @@ function calculateTotal(products) {
                 console.log('Total cost of your cart:', formattedTotal);
                 if (response.cardVerificationResponse) {
                     if (response.cardVerificationResponse.isValid) {
-                        console.log('Your card has been verified and purchase accepted.');
+                        console.log('Your card has been verified.');
+                        console.log('Purchase accepted.');
+                        console.log('Your order has been sent to the warehouse for picking');
+                        cardValid = true; 
                     } else {
                         console.log('Card verification failed. Please check your card details.');
                     }
                 }
-            } else {
-                console.log('Invalid credit/debit card details have been entered. Please check again:');
             }
-            //resolve the promise in all cases
-            resolve(); 
+        });
+
+        call.on('end', function() {
+            //resolve the promise only if the card is valid
+            if (cardValid) {
+                resolve();
+            } else {
+                //reject the promise if the card is invalid
+                reject(new Error('Invalid credit/debit card details have been entered. Please check again'));
+            }
         });
 
         //send cart items and card details to the server
@@ -45,6 +57,7 @@ function calculateTotal(products) {
             cart,
             paymentInfo: getCardDetails()
         });
+
         //indicate the end of data
         call.end();
     });
@@ -91,7 +104,10 @@ async function addToCart() {
         await addToCart();
     } else {
         //if products were added proceed to calculate the total
-        return calculateTotal(products);
+        return calculateTotal(products).catch((error) => {
+            console.error(error.message);
+            return addToCart();
+        });
     }
 }
 
@@ -167,7 +183,7 @@ async function main() {
                 main();
         }
 
-        // Ask the user if they want to perform another action
+        //ask the user if they want to perform another action
         continueShopping = readlineSync.keyInYN('Would you like to perform another action? ');
     }
 }
