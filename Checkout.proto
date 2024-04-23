@@ -66,14 +66,29 @@ message CardVerificationResponse {
     string message = 2;
 }
 
-// Request message for bidirectional streaming RPC for processing checkout
+//response message for order acceptance
+message OrderResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+//response message for warehouse picking
+message WarehouseResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+//request message for bidirectional streaming RPC for processing checkout
 message CheckoutRequest {
     Cart cart = 1;
     PaymentInfo payment_info = 2;
 }
 
-// Response message for bidirectional streaming RPC for processing checkout
+//response message for bidirectional streaming RPC for processing checkout
 message CheckoutResponse {
     TotalResponse total_response = 1;
     PaymentResponse payment_response = 2;
+    CardVerificationResponse card_verification_response = 3;
+    OrderResponse order_response = 4;
+    WarehouseResponse warehouse_response = 5;
 }
